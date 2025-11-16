@@ -1,0 +1,66 @@
+@use "mixins/mixins.scss" as *;
+
+@include b(tree) {
+  display: inline-block;
+  width: 100%;
+}
+
+@include b(tree-node) {
+  padding: 5px 0;
+
+  &:hover {
+    background-color: yellowgreen;
+  }
+
+  &:not(.is-disabled) {
+    .yx-tree-node__label {
+      cursor: pointer;
+      display: flex;
+      flex: 1;
+    }
+  }
+
+  &.is-disabled {
+    .yx-tree-node__label {
+      cursor: not-allowed;
+      display: flex;
+      flex: 1;
+    }
+  }
+
+  @include e("expand-icon") {
+    display: inline-block;
+    vertical-align: middle;
+    transform: rotate(0deg);
+    transition: transform 0.2s ease-in;
+    cursor: pointer;
+    &.expanded {
+      transform: rotate(90deg);
+    }
+    &.is-leaf {
+      cursor: default;
+      fill: transparent;
+    }
+  }
+
+  @include when(selected) {
+    background-color: yellowgreen;
+  }
+
+  @include e("content") {
+    cursor: pointer;
+    display: flex;
+    flex: 1;
+  }
+
+  // @include e("label") {
+  //   cursor: pointer;
+  //   display: flex;
+  //   flex: 1;
+  // }
+
+  @include when(disabled) {
+    background-color: rgb(227, 227, 227);
+    cursor: not-allowed;
+  }
+}

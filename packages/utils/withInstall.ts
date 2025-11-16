@@ -12,6 +12,7 @@ export function withInstall<T>(comp: T) {
   const c = comp as any;
   c.install = (app: App) => {
     const name = c.name || c.__name; // 取组件 name 或 __name
+    console.log("Registering component:", name);
     if (!name) {
       console.warn("组件缺少 name，无法全局注册");
       return;

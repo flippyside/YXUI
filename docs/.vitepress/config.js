@@ -11,9 +11,9 @@ module.exports = {
 
     // 顶部导航栏
     nav: [
-      { text: "指南", link: "/guide/getting-started" },
-      { text: "组件", link: "/components/button" },
-      { text: "GitHub", link: "https://github.com/flippyside" },
+      { text: "指南", link: "/guide/quickStart" },
+      { text: "组件", link: "/components/icon" },
+      { text: "GitHub", link: "https://github.com/flippyside/YXUI" },
     ],
 
     // 侧边栏结构
@@ -22,7 +22,7 @@ module.exports = {
         {
           text: "开发指南",
           items: [
-            { text: "快速开始", link: "/guide/getting-started" },
+            { text: "快速开始", link: "/guide/quickStart" },
             { text: "主题定制", link: "/guide/theme" },
           ],
         },
@@ -45,9 +45,7 @@ module.exports = {
     },
 
     // 社交链接（右上角图标）
-    socialLinks: [
-      { icon: "github", link: "https://github.com/yourname/yx-ui" },
-    ],
+    socialLinks: [{ icon: "github", link: "https://github.com/yourname/YXUI" }],
   },
 
   // markdown 配置

@@ -11,7 +11,7 @@ hero:
       link: /guide/quickStart
     - theme: alt
       text: 查看组件
-      # link: /components/button
+      link: /components/icon
 features:
   - title: Vue3 + TS 驱动
     details: 基于 Vue 3 Composition API 与 TypeScript 构建，类型安全，体验流畅。
