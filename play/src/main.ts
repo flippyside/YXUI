@@ -3,12 +3,13 @@ import App from "./App.vue";
 
 import Icon from "@yx/components/icon";
 import Tree from "@yx/components/tree";
+import Checkbox from "@yx/components/checkbox";
 import "@yx/theme-chalk/src/index.scss";
 
 // console.log(Icon);
 // console.log(Icon.install);
 
-const plugins = [Icon, Tree];
+const plugins = [Icon, Tree, Checkbox];
 
 const app = createApp(App);
 

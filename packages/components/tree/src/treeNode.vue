@@ -23,9 +23,17 @@
           <Loading v-else> </Loading>
         </yx-icon>
       </span>
-      <span :class="bem.e('label')" @click="handleSelected">{{
-        node?.label
-      }}</span>
+      <yx-checkbox
+        v-if="showCheckbox"
+        :model-value="checked"
+        :disabled="disabled"
+        :indeterminate="indeterminate"
+        @change="handleCheckChange"
+      ></yx-checkbox>
+      <span :class="bem.e('label')" @click="handleSelected">
+        <YxTreeNodeContent :node="node"></YxTreeNodeContent>
+        <!-- {{ node?.label }} -->
+      </span>
     </div>
   </div>
 </template>
@@ -37,6 +45,9 @@ import YxIcon from "@yx/components/icon";
 import Switcher from "./icon/switcher";
 import { computed } from "vue";
 import Loading from "./icon/Loading";
+
+import YxTreeNodeContent from "./icon/tree-node-content";
+import YxCheckbox from "@yx/components/checkbox";
 
 const bem = createNamespace("tree-node");
 const props = defineProps(treeNodeProps);
@@ -57,5 +68,11 @@ function handleSelected() {
   // console.log(props.node?.key);
   if (props.node?.disabled) return;
   emit("select", props.node!);
+}
+
+function handleCheckChange(e: Event) {
+  const inputElement = e.target as HTMLInputElement;
+  const val = inputElement.checked;
+  emit("check", props.node, val);
 }
 </script>

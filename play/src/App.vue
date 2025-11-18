@@ -3,7 +3,7 @@ import { AddCircle } from "@vicons/ionicons5";
 import type { Key, TreeOption } from "@yx/components/tree";
 import { ref } from "vue";
 
-function createData(level = 4, parentKey = ""): object {
+function createData(level = 3, parentKey = ""): object {
   if (!level) return [];
   const arr = new Array(6 - level).fill(0);
   return arr.map((_, idx: number) => {
@@ -87,6 +87,12 @@ const value = ref<Key[]>([]);
 //     }, 300);
 //   });
 // };
+const check = ref(true);
+
+// 用户可自定义checkbox change事件
+const handleChange = (val: boolean) => {
+  // console.log(val);
+};
 </script>
 
 <template>
@@ -114,7 +120,15 @@ const value = ref<Key[]>([]);
     v-model:selected-keys="value"
     selectable
     multiple
-  ></yx-tree>
+    show-checkbox
+    :default-checked-keys="['30', '41']"
+  >
+    <template #default="{ node }"> {{ node.key }} - {{ node.label }} </template>
+  </yx-tree>
+  {{ check }}
+  <yx-checkbox v-model="check" :disabled="false" @change="handleChange"
+    >hi</yx-checkbox
+  >
 </template>
 
 <style scoped></style>

@@ -1,23 +1,39 @@
 <template>
   <div :class="bem.b()">
-    <yx-tree-node
-      v-for="node in flattenTree"
-      :key="node.key"
-      :node="node"
-      :expanded="isExpanded(node)"
-      :loadingKeys="loadingKeyRef"
-      @toggle="toggleExpand"
-      :selectedKeys="selectedKeysRef"
-      @select="handleSelect"
-    ></yx-tree-node>
+    <yx-virtual-list :items="flattenTree" :remain="8" :size="35">
+      <template #default="{ node }">
+        <yx-tree-node
+          :key="node.key"
+          :node="node"
+          :expanded="isExpanded(node)"
+          :loadingKeys="loadingKeyRef"
+          @toggle="toggleExpand"
+          :selectedKeys="selectedKeysRef"
+          @select="handleSelect"
+          :show-checkbox="showCheckbox"
+          :checked="isChecked(node)"
+          :disabled="isDisabled(node)"
+          :indeterminate="isindeterminate(node)"
+          @check="toggleCheck"
+        ></yx-tree-node>
+      </template>
+    </yx-virtual-list>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
-import { Key, treeEmitts, TreeNode, TreeOption, treeProps } from "./tree";
+import { computed, onMounted, provide, ref, useSlots, watch } from "vue";
+import {
+  Key,
+  treeEmitts,
+  treeInjectKey,
+  TreeNode,
+  TreeOption,
+  treeProps,
+} from "./tree";
 import { createNamespace } from "@yx/utils/create";
 import YxTreeNode from "./treeNode.vue";
+import YxVirtualList from "@yx/components/virtual-list/src/virtual";
 
 const bem = createNamespace("tree");
 
@@ -66,6 +82,7 @@ function createTree(data: TreeOption[], parent: TreeNode | null = null) {
         level: parent ? parent.level + 1 : 0,
         isLeaf: node.isLeaf ?? children.length === 0,
         disabled: !!node.disabled, // !!显式转布尔：把任意值转成严格的 true / false
+        parentKey: parent?.key,
       };
       if (children.length > 0) {
         // 有孩子再去递归
@@ -216,4 +233,88 @@ function handleSelect(node: TreeNode) {
   }
   emit("update:selectedKeys", keys);
 }
+
+provide(treeInjectKey, {
+  slots: useSlots(),
+});
+
+const checkedKeysRefs = ref(new Set(props.defaultCheckedKeys));
+const indeterminateRef = ref<Set<Key>>(new Set());
+function isChecked(node: TreeNode) {
+  return checkedKeysRefs.value.has(node.key);
+}
+function isDisabled(node: TreeNode) {
+  return !!node.disabled;
+}
+
+function isindeterminate(node: TreeNode) {
+  return indeterminateRef.value.has(node.key);
+}
+
+function toggle(node: TreeNode, checked: boolean) {
+  if (!node) return;
+  const checkedKeys = checkedKeysRefs.value;
+  if (checked) {
+    // 选中的时候去掉半选状态
+    indeterminateRef.value.delete(node.key);
+  }
+  checkedKeys[checked ? "add" : "delete"](node.key);
+  const children = node.children;
+  if (children) {
+    children.forEach((childNode) => {
+      if (!childNode.disabled) {
+        toggle(childNode, checked);
+      }
+    });
+  }
+}
+
+function findNode(key: Key) {
+  return flattenTree.value.find((node) => node.key === key);
+}
+
+function udpateCheckKeys(node: TreeNode) {
+  if (node && node.parentKey) {
+    const parentNode = findNode(node.parentKey);
+
+    if (parentNode) {
+      let allChecked = true;
+      let hasChecked = false;
+      let nodes = parentNode.children;
+      for (let node of nodes) {
+        // 存在被选中的子节点
+        if (checkedKeysRefs.value.has(node.key)) {
+          hasChecked = true;
+        }
+        // 存在半选的子节点
+        else if (indeterminateRef.value.has(node.key)) {
+          allChecked = false;
+          hasChecked = true;
+        } else {
+          allChecked = false;
+        }
+      }
+      if (allChecked) {
+        checkedKeysRefs.value.add(parentNode.key);
+        indeterminateRef.value.delete(parentNode.key);
+      } else if (hasChecked) {
+        checkedKeysRefs.value.delete(parentNode.key);
+        indeterminateRef.value.add(parentNode.key);
+      }
+      udpateCheckKeys(parentNode);
+    }
+  }
+}
+
+// 实现点击父节点的checkbox时会全选子节点的checkbox
+function toggleCheck(node: TreeNode, checked: boolean) {
+  toggle(node, checked);
+  udpateCheckKeys(node);
+}
+
+onMounted(() => {
+  checkedKeysRefs.value.forEach((key: Key) => {
+    toggleCheck(findNode(key)!, true);
+  });
+});
 </script>

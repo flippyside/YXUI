@@ -142,7 +142,58 @@ ESLint 是一款用于静态代码分析的工具，可以检查 JavaScript 代�
 
 使用 vitepress
 
-## 实现一个组件：icon
+## vue 中使用 jsx、tsx
+
+什么是 jsx：JSX 允许你在 JavaScript 中编写类似 HTML 的标签，从而使渲染的逻辑和内容可以写在一起
+
+### 使用 jsx
+
+1. 在 vue 文件中编写 jsx
+
+```vue
+<script>
+import { ref } from "vue";
+
+export default {
+  setup() {
+    const countRef = ref(1);
+    const render = () => {
+      return <div>Hello JSX {countRef.value}</div>;
+    };
+    return render;
+  },
+};
+</script>
+```
+
+2. 在专门的.jsx 文件中编写 jsx：
+
+```jsx
+import { defineComponent } from "vue";
+import Child from "./Child";
+
+export default defineComponent({
+  props: {
+    name: {
+      type: String,
+    },
+  },
+  setup(props) {
+    const countRef = ref(1);
+    const render = () => {
+      return (
+        <div>
+          Hello JSX {props.name} {countRef.value}
+          <Child></Child>
+        </div>
+      );
+    };
+    return render;
+  },
+});
+```
+
+## 实现第一个组件：icon
 
 主要思路：
 
@@ -286,6 +337,8 @@ node[childrenField] // node["children"]
 ```
 
 ### 拍平树
+
+将树形结构拍平成 list 结构，然后用 list 来模拟树形结构。
 
 default-expanded-keys 用于用户指定需要展开的节点 id。
 
@@ -595,4 +648,161 @@ function handleSelected() {
 }
 ```
 
-### 实现自定义节点
+### 实现自定义显示内容
+
+需求：用户可以通过 slot 传递需要自定义显示的内容
+
+例如：
+
+```js
+<yx-tree
+  :data="data"
+  :on-load="handleLoad"
+  v-model:selected-keys="value"
+  selectable
+  multiple
+>
+  <template #default="{ node }"> {{ node.key }} - {{ node.label }} </template>
+</yx-tree>
+```
+
+由于 treenode 不是 tree 的直接子组件，所以不能把 slot 直接传给 tree-node
+
+思路：provide & inject 实现跨级传递
+
+- tree 把插槽函数通过 provide 传给所有 TreeNode
+- TreeNode 用一个 TSX 组件调这个 slot 函数
+
+tree 组件 provide 提供 slots 给子孙组件
+
+```js
+provide(treeInjectKey, {
+  slots: useSlots(), // 获取当前组件（tree）的所有插槽。
+});
+```
+
+treenode 使用一个组件来渲染 slot
+
+```js
+<span :class="bem.e('label')" @click="handleSelected">
+  <YxTreeNodeContent :node="node"></YxTreeNodeContent>
+</span>
+```
+
+在单独的 tsx 文件定义：YxTreeNodeContent
+
+- 通过 inject 拿到 tree 提供的 slots
+- 取出用户传来的 default slot
+- 调用这个 slot 函数，并传入 node 作为参数
+- 若用户没传入 slot，则 fallback 为 node.label
+
+```tsx
+export default defineComponent({
+  name: "YxTreeNodeContent",
+  props: treeNodeContentProps,
+  setup(props) {
+    const treeContext = inject(treeInjectKey);
+    const node = props.node;
+    // console.log(node);
+    return () => {
+      return treeContext?.slots.default
+        ? treeContext?.slots.default({ node }) // 用户自定义内容
+        : node?.label;
+    };
+  },
+});
+```
+
+类型定义：
+
+- TreeContext：定义“Tree 要传给 TreeNode 的数据”，即 Tree 组件的 slots（即父组件传入的自定义节点渲染）
+- treeInjectKey：提供一个唯一 key，使 TreeNode 能安全获取 Tree 组件传下来的 slot
+- treeNodeContentProps：定义 YxTreeNodeContent 组件接受的 props：必须是 TreeNode 对象
+
+```ts
+export interface TreeContext {
+  slots: SetupContext["slots"];
+  // emit: SetupContext<typeof treeEmitts>["emit"];
+}
+
+export const treeInjectKey: InjectionKey<TreeContext> = Symbol();
+
+export const treeNodeContentProps = {
+  node: {
+    type: Object as PropType<TreeNode>,
+    required: true,
+  },
+};
+```
+
+总结：父组件传入 slot → Tree provide → TreeNode 通过 YxTreeNodeContent 注入 → YxTreeNodeContent 负责 inject 与渲染
+
+### 实现树的虚拟滚动
+
+```ts
+<yx-virtual-list :items="flattenTree" :remain="8" :size="35">
+  <template #default="{ node }">
+    <yx-tree-node
+      :key="node.key"
+      :node="node"
+      :expanded="isExpanded(node)"
+      :loadingKeys="loadingKeyRef"
+      @toggle="toggleExpand"
+      :selectedKeys="selectedKeysRef"
+      @select="handleSelect"
+    ></yx-tree-node>
+  </template>
+</yx-virtual-list>
+```
+
+#### 实现 VirtualList 组件
+
+在 virtaul.tsx 中定义 VirtualList 组件
+
+### 实现 checkbox 组件
+
+需求：
+
+- 支持用户设置初始值是半选、禁用状态
+
+```VUE
+  <yx-checkbox
+    v-model="check"
+    :disabled="true"
+    :indeterminate="true"
+  ></yx-checkbox>
+```
+
+注意节点被 disabled 时，checkbox 也要 disabled
+
+### 实现树组件级联选择
+
+需求：
+
+- 支持点击父节点，实现子节点全选
+- 点击子节点也可改变父节点状态
+
+```js
+function toggle(node: TreeNode, checked: boolean) {
+  const checkedKeys = checkedKeysRefs.value;
+  if (checked) {
+    // 选中的时候去掉半选状态
+    indeterminateRef.value.delete(node.key);
+  }
+  checkedKeys[checked ? "add" : "delete"](node.key);
+  const children = node.children;
+  if (children) {
+    children.forEach((childNode) => {
+      if (!childNode.disabled) {
+        toggle(childNode, checked);
+      }
+    });
+  }
+}
+// 实现点击父节点的checkbox时会全选子节点的checkbox
+function toggleCheck(node: TreeNode, checked: boolean) {
+  toggle(node, checked);
+}
+```
+
+## 实现 button 组件

@@ -1,4 +1,4 @@
-import { ExtractPropTypes, PropType } from "vue";
+import { ExtractPropTypes, InjectionKey, PropType, SetupContext } from "vue";
 
 export type Key = string | number;
 
@@ -6,6 +6,7 @@ export interface TreeNode extends Required<TreeOption> {
   level: number;
   rawNode: TreeOption;
   children: TreeNode[];
+  parentKey: Key | undefined;
 }
 
 export interface TreeOption {
@@ -50,6 +51,14 @@ export const treeProps = {
     type: Boolean,
     default: false,
   },
+  showCheckbox: {
+    type: Boolean,
+    default: false,
+  },
+  defaultCheckedKeys: {
+    type: Array as PropType<Key[]>,
+    default: () => [],
+  },
 } as const;
 
 export type TreeProps = Partial<ExtractPropTypes<typeof treeProps>>;
@@ -71,7 +80,14 @@ export const treeNodeProps = {
     type: Array as PropType<Key[]>,
     default: () => [],
   },
-};
+  showCheckbox: {
+    type: Boolean,
+    default: false,
+  },
+  checked: Boolean,
+  disabled: Boolean,
+  indeterminate: Boolean,
+} as const;
 
 export const treeEmitts = {
   // 同步响应式数据
@@ -81,4 +97,19 @@ export const treeEmitts = {
 export const treeNodeEmitts = {
   toggle: (node: TreeNode) => node,
   select: (node: TreeNode) => node,
+  check: (node: TreeNode, val: boolean) => val,
+};
+
+export interface TreeContext {
+  slots: SetupContext["slots"];
+  // emit: SetupContext<typeof treeEmitts>["emit"];
+}
+
+export const treeInjectKey: InjectionKey<TreeContext> = Symbol();
+
+export const treeNodeContentProps = {
+  node: {
+    type: Object as PropType<TreeNode>,
+    required: true,
+  },
 };
