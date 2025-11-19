@@ -42,9 +42,9 @@
 import { createNamespace } from "@yx/utils/create";
 import { TreeNode, treeNodeEmitts, treeNodeProps } from "./tree";
 import YxIcon from "@yx/components/icon";
-import Switcher from "./icon/switcher";
+import Switcher from "../../internal-icon/switcher";
 import { computed } from "vue";
-import Loading from "./icon/Loading";
+import Loading from "../../internal-icon/Loading";
 
 import YxTreeNodeContent from "./icon/tree-node-content";
 import YxCheckbox from "@yx/components/checkbox";

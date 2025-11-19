@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { AddCircle } from "@vicons/ionicons5";
+import { AddCircle, Person } from "@vicons/ionicons5";
 import type { Key, TreeOption } from "@yx/components/tree";
-import { ref } from "vue";
+import { ref, warn } from "vue";
 
 function createData(level = 3, parentKey = ""): object {
   if (!level) return [];
@@ -93,10 +93,28 @@ const check = ref(true);
 const handleChange = (val: boolean) => {
   // console.log(val);
 };
+
+const handleClick = (e) => {
+  console.log(e);
+};
+
+const handleMousedown = (e) => {
+  console.log(e);
+};
+
+const username = ref("");
+
+const handleBlur = (e: FocusEvent) => {
+  console.log("blur", (e.target as HTMLInputElement).value);
+};
+
+const handleFocus = (e: FocusEvent) => {
+  console.log("focus", (e.target as HTMLInputElement).value);
+};
 </script>
 
 <template>
-  <yx-icon color="red" :size="24">
+  <!-- <yx-icon color="red" :size="24">
     <AddCircle></AddCircle>
   </yx-icon>
   <yx-icon color="yellow" :size="24">
@@ -104,7 +122,7 @@ const handleChange = (val: boolean) => {
   </yx-icon>
   <yx-icon color="yellow" :size="24">
     <AddCircle></AddCircle>
-  </yx-icon>
+  </yx-icon> -->
   <!-- <yx-tree
     :data="data"
     label-field="label"
@@ -114,6 +132,8 @@ const handleChange = (val: boolean) => {
   ></yx-tree> -->
   <!--实现懒加载 -->
   {{ value }}
+
+  <!-- 树 -->
   <yx-tree
     :data="data"
     :on-load="handleLoad"
@@ -121,14 +141,60 @@ const handleChange = (val: boolean) => {
     selectable
     multiple
     show-checkbox
+    :clearable="true"
     :default-checked-keys="['30', '41']"
   >
     <template #default="{ node }"> {{ node.key }} - {{ node.label }} </template>
   </yx-tree>
+
+  <!-- 按钮 -->
+  <!-- <yx-button type="primary" size="medium" iconPlacement="right" :loading="true"
+    >button1</yx-button
+  >
+  <yx-button
+    type="success"
+    size="medium"
+    @click="handleClick"
+    @mousedown="handleMousedown"
+  >
+    button
+    <template #icon>
+      <yx-icon>
+        <AddCircle></AddCircle>
+      </yx-icon>
+    </template>
+  </yx-button>
+  <yx-button type="warning" size="medium">button</yx-button>
+  <yx-button type="info" size="medium">button</yx-button>
+  <yx-button type="danger" size="medium">button</yx-button> -->
+
+  <!-- 输入框 -->
+  {{ username }}
+  <yx-input
+    v-model="username"
+    @blur="handleBlur"
+    @focus="handleFocus"
+    placeholder="请输入"
+    :show-password="true"
+  >
+    <template #prepend>hello</template>
+    <template #prefixIcon>
+      <yx-icon>
+        <Person></Person>
+      </yx-icon>
+    </template>
+    <template #suffixIcon>
+      <yx-icon>
+        <Person></Person>
+      </yx-icon>
+    </template>
+    <template #append>bye</template>
+  </yx-input>
+  <!-- 
   {{ check }}
   <yx-checkbox v-model="check" :disabled="false" @change="handleChange"
     >hi</yx-checkbox
-  >
+  > -->
 </template>
 
 <style scoped></style>

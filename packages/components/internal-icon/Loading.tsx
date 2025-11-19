@@ -16,9 +16,10 @@ export default defineComponent({
           cy="12"
           r="10"
           stroke="black"
-          stroke-width="4"
+          stroke-width="2"
           fill="none"
           stroke-dasharray="50 100" // 60 为可见弧长，100 为缺口长度
+          // strokeLinecap="round"
         />
       </svg>
     );

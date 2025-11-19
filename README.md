@@ -765,12 +765,12 @@ export const treeNodeContentProps = {
 
 - 支持用户设置初始值是半选、禁用状态
 
-```VUE
-  <yx-checkbox
-    v-model="check"
-    :disabled="true"
-    :indeterminate="true"
-  ></yx-checkbox>
+```vue
+<yx-checkbox
+  v-model="check"
+  :disabled="true"
+  :indeterminate="true"
+></yx-checkbox>
 ```
 
 注意节点被 disabled 时，checkbox 也要 disabled
@@ -806,3 +806,106 @@ function toggleCheck(node: TreeNode, checked: boolean) {
 ```
 
 ## 实现 button 组件
+
+- 组件属性：
+  - 组件的大小 size、颜色展现类型 type、圆角 round、正在加载 loading、禁用 disabled、原始类型 native-type
+- 插槽
+- 功能：清空输入框、密码的显示与隐藏
+
+## 实现 input 组件
+
+属性：
+
+- type：默认是 text
+- modelValue： v-model = modelValue + @update:modelValue
+- placeholder 默认展示的内容
+- clearable：清空输入框的内容
+- show-password
+- readonly
+- label
+
+### 实现受控组件的 v-model 双向绑定
+
+数据流：用户输入触发原生 input 事件 → 子组件 emit → 父组件 username 变化 → 子组件 props.modelValue 变化 → watcher → 再写回原生 input
+
+```vue
+<!-- App.vue -->
+<yx-input v-model="username">
+```
+
+1. yx-input 组件：
+
+- 接收到一个名为 modelValue 的 prop，值就是父组件的 username
+- 当子组件触发 emit("update:modelValue", value) 时，父组件自动更新 username
+
+Vue 会自动把`v-model="username"`转换成：
+
+```vue
+<yx-input
+:modelValue="username"
+@update:modelValue="username = $event"
+>
+```
+
+2. 组件接收 modelValue，并把它同步到原生 input 的 value
+
+2.1 监听 props.modelValue
+
+父组件修改 username → 子组件的 props.modelValue 更新 → watcher 触发：
+
+```vue
+<script lang="js" setup>
+// 监控value值的变化
+watch(
+  () => props.modelValue,
+  () => {
+    setNativeInputValue();
+  }
+);
+</script>
+```
+
+2.2 写入原生 <input> 的 value
+
+原因是没有用 :value="modelValue"，而是手动管理 input.value，所以要显式写入
+
+```vue
+const input = ref<HTMLInputElement | null>(null);
+
+const setNativeInputValue = () => {
+  const inputEle = input.value;
+  if (!inputEle) {
+    return;
+  }
+  inputEle.value = String(props.modelValue);
+};
+
+onMounted(() => {
+  setNativeInputValue();
+});
+</script>
+```
+
+3. 用户输入时向父组件派发事件
+
+原生 <input> 监听了 input 事件：
+
+```vue
+<input
+  type="text"
+  v-bind="attrs"
+  :class="bem.e('inner')"
+  ref="input"
+  @input="handelInput"
+/>
+```
+
+```vue
+<script lang="js" setup>
+const handelInput = (e: Event) => {
+  const value = (e.target as HTMLInputElement).value;
+  emit("input", value);
+  emit("update:modelValue", value);  // 触发 v-model 更新父组件 username
+};
+</script>
+```
