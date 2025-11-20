@@ -86,7 +86,7 @@ monorepo 是一种将多个项目代码存储在一个仓库里的软件开发�
 用 nvm 管理版本：
 
 - 若提示没有 nvm，就先执行 export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 - nvm list
 - nvm install
 - nvm use 17：切换到 node 版本 17
@@ -107,7 +107,7 @@ BEM 命名规范：
 
 ## 组件命名
 
-如果希望在使用组件时用<yx-icon></yx-icon>，那么注册时需要使用`YxIcon`
+如果希望在使用组件时用`<yx-icon></yx-icon>`，那么注册时需要使用 `YxIcon`
 
 ```ts
 defineOptions({
@@ -204,7 +204,7 @@ export default defineComponent({
   - install：Vue 插件机制的核心方法。作用是告诉 Vue：当你执行 app.use(某个对象) 时，该对象应该做哪些初始化或注册。
 - 整合导出：components/index.ts → 可单独 import 或全局注册
 - 全局注册：main.ts 里 app.use(Icon)
-- 模板使用：<YxIcon> 或 <yx-icon> → 样式 + slot 内容生效
+- 模板使用：`<YxIcon>` 或 `<yx-icon>` → 样式 + slot 内容生效
 
 icon.vue:
 
@@ -294,7 +294,7 @@ main.ts：
 
 - 引入组件库的 Icon 组件。
 - 遍历插件数组，用 app.use(plugin) 全局注册组件。
-- 组件的名字取自 defineOptions({ name: 'YxIcon' })，所以在模板中可以直接 <YxIcon> 使用。
+- 组件的名字取自 defineOptions({ name: 'YxIcon' })，所以在模板中可以直接 `<YxIcon>` 使用。
 - 引入 scss 样式文件，让组件显示正常。
 
 ```ts
@@ -838,7 +838,7 @@ function toggleCheck(node: TreeNode, checked: boolean) {
 - 接收到一个名为 modelValue 的 prop，值就是父组件的 username
 - 当子组件触发 emit("update:modelValue", value) 时，父组件自动更新 username
 
-Vue 会自动把`v-model="username"`转换成：
+Vue 会自动把 `v-model="username"`转换成：
 
 ```vue
 <yx-input
@@ -865,7 +865,7 @@ watch(
 </script>
 ```
 
-2.2 写入原生 <input> 的 value
+2.2 写入原生 `<input>` 的 value
 
 原因是没有用 :value="modelValue"，而是手动管理 input.value，所以要显式写入
 
@@ -888,7 +888,7 @@ onMounted(() => {
 
 3. 用户输入时向父组件派发事件
 
-原生 <input> 监听了 input 事件：
+原生 `<input>` 监听了 input 事件：
 
 ```vue
 <input
@@ -909,3 +909,233 @@ const handelInput = (e: Event) => {
 };
 </script>
 ```
+
+## 实现 form 组件
+
+form由多个form-item组成。
+
+form-item的属性：
+
+- prop
+- label 输入框的标题
+- rules 表单输入的框的规则
+- show-message 是否显示错误
+- change、blur
+
+校验功能：
+
+- 支持用户传入规则到rules
+- 支持单个form-item校验
+- 支持校验整个form（点击按钮）
+
+
+
+| 组件             |           职责           |
+| ---------------- | :----------------------: |
+| `<yx-input>`     |    负责输入与触发事件    |
+| `<yx-form-item>` | 负责规则处理与单字段校验 |
+| `<yx-form>`      |  负责整体数据与整体校验  |
+
+
+
+### 实现校验功能
+
+#### 将校验规则 rules 跨级传递给 input 组件：provide & inject
+
+用户传入规则：
+
+```vue
+<yx-form-item
+  prop="username"
+  :rules="[
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { min: 6, max: 10, message: '用户名6-10位', trigger: ['change', 'blur'] },
+  ]"
+>
+  <yx-input placeholder="请输入用户名" v-model="state.username"></yx-input>
+</yx-form-item>
+```
+
+父组件 from-item provide：
+
+```vue
+// from-item.vue
+<script setup lang="ts">
+const validate: FormItemContext["validate"] = async (trigger, callback?) => {
+  // 拿到触发的时机(blur、change...)，校验是否通过可以调用 callback 或者调用promise.then方法
+};
+
+const context: FormItemContext = {
+  ...props,
+  validate,
+};
+
+provide(formItemContextKeys, context);
+</script>
+```
+
+定义formItemContextKeys，收集 FormItem 的核心属性：
+
+```ts
+// from-item.ts
+export interface FormItemContext extends FormItemProps {
+  // 供input调用
+  validate: (
+    trigger: string,
+    callback?: (isValid: boolean) => void
+  ) => Promise<void>;
+}
+
+export const formItemContextKeys: InjectionKey<FormItemProps> = Symbol();
+```
+
+子组件 inject FormItem提供的上下文：
+
+```ts
+// input.vue
+const formItemContext = inject(formItemContextKeys);
+```
+
+这样 input 可以在输入值更新时，调用FormItem的validate并传入触发事件(blur，change...)，触发 validate 校验
+
+```js
+watch(
+  () => props.modelValue,
+  () => {
+    formItemContext?.validate("change");
+  }
+);
+
+const handleBlur = (e: FocusEvent) => {
+  formItemContext?.validate("blur");
+};
+```
+
+#### 实现 form 的 validate
+
+使用 async-validator 实现单个 form-item 的 validate 校验函数：
+
+```js
+import AsyncValidator from "async-validator";
+
+const onValidationSuccessed = () => {
+  validateState.value = "success";
+  validateMessage.value = "";
+};
+
+const onValidationFailed = (err: Values) => {
+  validateState.value = "error";
+  const { errors } = err;
+  validateMessage.value = errors ? errors[0].message : "";
+};
+
+const validate: FormItemContext["validate"] = async (trigger, callback?) => {
+  // 拿到触发的时机，校验是否通过可以调用callback 或者调用promise.then方法
+  const rules = getRuleFiltered(trigger);
+  // console.log(rules);
+  const modelName = props.prop!;
+
+  const validator = new AsyncValidator({
+    [modelName]: rules,
+  });
+  const model = formContext!.model!;
+
+  return validator
+    .validate({
+      [modelName]: model[modelName],
+    })
+    .then(() => {
+      onValidationSuccessed();
+    })
+    .catch((err) => {
+      onValidationFailed(err);
+    });
+};
+```
+
+form 有多个 form-item，需要收集它们的 rule 来统一在 form 中做校验。
+
+- form提供addField方法供子组件调用
+- 子组件调用addField传递自己的context给父组件form
+- form校验所有子组件
+
+```js
+// form.vue
+const fields: FormItemContext[] = []; // 存储儿子们的context，即FormItemContext
+
+// 供儿子们调用，收集儿子们的context
+const addField: FormContext["addField"] = (context: FormItemContext) => {
+  fields.push(context);
+};
+
+const context = {
+  ...props,
+  addField,
+};
+```
+
+```js
+// form-item.vue
+onMounted(() => {
+  formContext?.addField(context); // 将自己的context传递给父亲
+});
+```
+
+```js
+// form.vue
+const validate = async (
+  callback?: (valid: boolean, fields?: Values) => void
+) => {
+  let errors: Values = {};
+  // 触发每个子组件校验
+  for (const field of fields) {
+    try {
+      await field.validate("");
+    } catch (error) {
+      errors = {
+        ...errors,
+        ...(error as Values).fields,
+      };
+    }
+  }
+  if (Object.keys(errors).length === 0) {
+    return callback?.(true);
+  } else {
+    if (callback) {
+      callback?.(false, errors);
+    } else {
+      return Promise.reject(errors);
+    }
+  }
+};
+```
+
+将form的validate方法暴露出去：
+
+```js
+// form.vue
+defineExpose({
+  validate,
+});
+```
+
+```vue
+<script>
+const formRef = ref<FormInstance>();
+
+const validateForm = () => {
+  const form = formRef.value;
+  form?.validate((valid, errors) => {
+    console.log(valid, errors);
+  });
+};
+</script>
+
+<template>
+  <yx-form>
+    ref="formRef"
+  </yx-form>
+    <yx-button @click="validateForm">校验表单</yx-button>
+</template>
+```
+

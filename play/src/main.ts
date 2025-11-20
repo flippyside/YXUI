@@ -6,18 +6,17 @@ import Tree from "@yx/components/tree";
 import Checkbox from "@yx/components/checkbox";
 import Button from "@yx/components/button";
 import Input from "@yx/components/input";
+import { FormItem, Form } from "@yx/components/form";
 import "@yx/theme-chalk/src/index.scss";
 
 // console.log(Icon);
 // console.log(Icon.install);
 
-const plugins = [Icon, Tree, Checkbox, Button, Input];
+const plugins = [Icon, Tree, Checkbox, Button, Input, FormItem, Form];
 
 const app = createApp(App);
 
 plugins.forEach((plugin) => {
-  console.log("plugin:", plugin);
-
   app.use(plugin);
 }); // 注册为全局组件
 

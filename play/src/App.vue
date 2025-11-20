@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { AddCircle, Person } from "@vicons/ionicons5";
+import type { FormInstance } from "@yx/components/form";
 import type { Key, TreeOption } from "@yx/components/tree";
-import { ref, warn } from "vue";
+import { reactive, ref, warn } from "vue";
 
 function createData(level = 3, parentKey = ""): object {
   if (!level) return [];
@@ -87,33 +88,96 @@ const value = ref<Key[]>([]);
 //     }, 300);
 //   });
 // };
-const check = ref(true);
+// const check = ref(true);
 
-// 用户可自定义checkbox change事件
-const handleChange = (val: boolean) => {
-  // console.log(val);
-};
+// // 用户可自定义checkbox change事件
+// const handleChange = (val: boolean) => {
+//   // console.log(val);
+// };
 
-const handleClick = (e) => {
-  console.log(e);
-};
+// const handleClick = (e) => {
+//   console.log(e);
+// };
 
-const handleMousedown = (e) => {
-  console.log(e);
-};
+// const handleMousedown = (e) => {
+//   console.log(e);
+// };
 
-const username = ref("");
+// const username = ref("");
 
-const handleBlur = (e: FocusEvent) => {
-  console.log("blur", (e.target as HTMLInputElement).value);
-};
+// const handleBlur = (e: FocusEvent) => {
+//   console.log("blur", (e.target as HTMLInputElement).value);
+// };
 
-const handleFocus = (e: FocusEvent) => {
-  console.log("focus", (e.target as HTMLInputElement).value);
+// const handleFocus = (e: FocusEvent) => {
+//   console.log("focus", (e.target as HTMLInputElement).value);
+// };
+
+const state = reactive({ username: "", password: "" });
+
+const formRef = ref<FormInstance>();
+
+const validateForm = () => {
+  const form = formRef.value;
+  form?.validate((valid, errors) => {
+    console.log(valid, errors);
+  });
 };
 </script>
 
 <template>
+  <yx-form
+    ref="formRef"
+    :model="state"
+    :rules="{
+      username: {
+        min: 6,
+        max: 10,
+        message: '用户名6-10位',
+        trigger: ['change', 'blur'],
+      },
+    }"
+  >
+    <yx-form-item
+      prop="username"
+      :rules="[
+        { required: true, message: '请输入用户名', trigger: 'blur' },
+        {
+          min: 6,
+          max: 10,
+          message: '用户名6-10位',
+          trigger: ['change', 'blur'],
+        },
+      ]"
+    >
+      <yx-input placeholder="请输入用户名" v-model="state.username"></yx-input>
+      <template #label>用户名</template>
+      <!-- <template #error>输入有误</template> -->
+    </yx-form-item>
+    <yx-form-item
+      prop="password"
+      :rules="[
+        { required: true, message: '请输入密码', trigger: 'blur' },
+        {
+          min: 6,
+          max: 10,
+          message: '密码6-10位',
+          trigger: ['change', 'blur'],
+        },
+      ]"
+    >
+      <yx-input
+        placeholder="请输入密码"
+        v-model="state.password"
+        type="password"
+      ></yx-input>
+      <template #label>密码</template>
+      <!-- <template #error>输入有误</template> -->
+    </yx-form-item>
+    <yx-button size="medium" type="primary" :round="true" @click="validateForm"
+      >校验表单</yx-button
+    >
+  </yx-form>
   <!-- <yx-icon color="red" :size="24">
     <AddCircle></AddCircle>
   </yx-icon>
@@ -131,10 +195,10 @@ const handleFocus = (e: FocusEvent) => {
     :default-expanded-keys="['41', '4130']"
   ></yx-tree> -->
   <!--实现懒加载 -->
-  {{ value }}
+  <!-- {{ value }} -->
 
   <!-- 树 -->
-  <yx-tree
+  <!-- <yx-tree
     :data="data"
     :on-load="handleLoad"
     v-model:selected-keys="value"
@@ -145,7 +209,7 @@ const handleFocus = (e: FocusEvent) => {
     :default-checked-keys="['30', '41']"
   >
     <template #default="{ node }"> {{ node.key }} - {{ node.label }} </template>
-  </yx-tree>
+  </yx-tree> -->
 
   <!-- 按钮 -->
   <!-- <yx-button type="primary" size="medium" iconPlacement="right" :loading="true"
@@ -169,7 +233,7 @@ const handleFocus = (e: FocusEvent) => {
   <yx-button type="danger" size="medium">button</yx-button> -->
 
   <!-- 输入框 -->
-  {{ username }}
+  <!-- {{ username }}
   <yx-input
     v-model="username"
     @blur="handleBlur"
@@ -189,7 +253,8 @@ const handleFocus = (e: FocusEvent) => {
       </yx-icon>
     </template>
     <template #append>bye</template>
-  </yx-input>
+  </yx-input> -->
+
   <!-- 
   {{ check }}
   <yx-checkbox v-model="check" :disabled="false" @change="handleChange"

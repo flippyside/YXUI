@@ -20,6 +20,9 @@ importers:
       '@yx/utils':
         specifier: workspace:^
         version: link:packages/utils
+      async-validator:
+        specifier: ^4.2.5
+        version: 4.2.5
       tslib:
         specifier: ^2.8.1
         version: 2.8.1
@@ -65,7 +68,7 @@ importers:
         version: 3.1.1(vue@3.5.24(typescript@5.9.3))
       vitepress:
         specifier: ^1.6.4
-        version: 1.6.4(@algolia/client-search@5.44.0)(@types/node@24.10.1)(postcss@8.5.6)(sass@1.94.0)(search-insights@2.17.3)(typescript@5.9.3)
+        version: 1.6.4(@algolia/client-search@5.44.0)(@types/node@24.10.1)(async-validator@4.2.5)(postcss@8.5.6)(sass@1.94.0)(search-insights@2.17.3)(typescript@5.9.3)
 
   packages/components: {}
 
@@ -1156,6 +1159,9 @@ packages:
   ast-walker-scope@0.8.3:
     resolution: {integrity: sha512-cbdCP0PGOBq0ASG+sjnKIoYkWMKhhz+F/h9pRexUdX2Hd38+WOlBkRKlqkGOSm0YQpcFMQBJeK4WspUAkwsEdg==}
     engines: {node: '>=20.19.0'}
+
+  async-validator@4.2.5:
+    resolution: {integrity: sha512-7HhHjtERjqlNbZtqNqy2rckN/SpOOlmDliet+lP7k+eKZEjPk3DgyeU9lIXLdeLz0uBbbVp+9Qdow9wJWgwwfg==}
 
   balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
@@ -2978,12 +2984,13 @@ snapshots:
     transitivePeerDependencies:
       - typescript
 
-  '@vueuse/integrations@12.8.2(focus-trap@7.6.6)(typescript@5.9.3)':
+  '@vueuse/integrations@12.8.2(async-validator@4.2.5)(focus-trap@7.6.6)(typescript@5.9.3)':
     dependencies:
       '@vueuse/core': 12.8.2(typescript@5.9.3)
       '@vueuse/shared': 12.8.2(typescript@5.9.3)
       vue: 3.5.24(typescript@5.9.3)
     optionalDependencies:
+      async-validator: 4.2.5
       focus-trap: 7.6.6
     transitivePeerDependencies:
       - typescript
@@ -3041,6 +3048,8 @@ snapshots:
     dependencies:
       '@babel/parser': 7.28.5
       ast-kit: 2.2.0
+
+  async-validator@4.2.5: {}
 
   balanced-match@1.0.2: {}
 
@@ -3825,7 +3834,7 @@ snapshots:
       fsevents: 2.3.3
       sass: 1.94.0
 
-  vitepress@1.6.4(@algolia/client-search@5.44.0)(@types/node@24.10.1)(postcss@8.5.6)(sass@1.94.0)(search-insights@2.17.3)(typescript@5.9.3):
+  vitepress@1.6.4(@algolia/client-search@5.44.0)(@types/node@24.10.1)(async-validator@4.2.5)(postcss@8.5.6)(sass@1.94.0)(search-insights@2.17.3)(typescript@5.9.3):
     dependencies:
       '@docsearch/css': 3.8.2
       '@docsearch/js': 3.8.2(@algolia/client-search@5.44.0)(search-insights@2.17.3)
@@ -3838,7 +3847,7 @@ snapshots:
       '@vue/devtools-api': 7.7.8
       '@vue/shared': 3.5.24
       '@vueuse/core': 12.8.2(typescript@5.9.3)
-      '@vueuse/integrations': 12.8.2(focus-trap@7.6.6)(typescript@5.9.3)
+      '@vueuse/integrations': 12.8.2(async-validator@4.2.5)(focus-trap@7.6.6)(typescript@5.9.3)
       focus-trap: 7.6.6
       mark.js: 8.11.1
       minisearch: 7.2.0

@@ -47,6 +47,7 @@
 import { createNamespace } from "@yx/utils/create";
 import {
   computed,
+  inject,
   nextTick,
   onMounted,
   ref,
@@ -58,6 +59,7 @@ import { inputEmits, inputProps } from "./input";
 import { Eye } from "@vicons/ionicons5";
 import { EyeOff } from "@vicons/ionicons5";
 import { Close } from "@vicons/ionicons5";
+import { formItemContextKeys } from "@yx/components/form";
 
 defineOptions({
   name: "yx-input",
@@ -72,10 +74,13 @@ const attrs = useAttrs();
 
 const slots = useSlots();
 
+const formItemContext = inject(formItemContextKeys);
+
 // 监控value值的变化
 watch(
   () => props.modelValue,
   () => {
+    formItemContext?.validate("change").catch(() => {});
     setNativeInputValue();
   }
 );
@@ -140,6 +145,7 @@ const handleChange = (e: Event) => {
 };
 
 const handleBlur = (e: FocusEvent) => {
+  formItemContext?.validate("blur").catch(() => {});
   emit("blur", e);
 };
 
