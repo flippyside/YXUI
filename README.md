@@ -910,11 +910,13 @@ const handelInput = (e: Event) => {
 </script>
 ```
 
+
+
 ## 实现 form 组件
 
-form由多个form-item组成。
+form 由多个 form-item 组成。
 
-form-item的属性：
+form-item 的属性：
 
 - prop
 - label 输入框的标题
@@ -924,11 +926,9 @@ form-item的属性：
 
 校验功能：
 
-- 支持用户传入规则到rules
-- 支持单个form-item校验
-- 支持校验整个form（点击按钮）
-
-
+- 支持用户传入规则到 rules
+- 支持单个 form-item 校验
+- 支持校验整个 form（点击按钮）
 
 | 组件             |           职责           |
 | ---------------- | :----------------------: |
@@ -947,10 +947,8 @@ form-item的属性：
 ```vue
 <yx-form-item
   prop="username"
-  :rules="[
-    { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 6, max: 10, message: '用户名6-10位', trigger: ['change', 'blur'] },
-  ]"
+  :rules="[{ required: true, message: '请输入用户名', trigger: 'blur' },
+    { min: 6, max: 10, message: '用户名6-10位', trigger: ['change', 'blur'] },]"
 >
   <yx-input placeholder="请输入用户名" v-model="state.username"></yx-input>
 </yx-form-item>
@@ -974,7 +972,7 @@ provide(formItemContextKeys, context);
 </script>
 ```
 
-定义formItemContextKeys，收集 FormItem 的核心属性：
+定义 formItemContextKeys，收集 FormItem 的核心属性：
 
 ```ts
 // from-item.ts
@@ -989,14 +987,14 @@ export interface FormItemContext extends FormItemProps {
 export const formItemContextKeys: InjectionKey<FormItemProps> = Symbol();
 ```
 
-子组件 inject FormItem提供的上下文：
+子组件 inject FormItem 提供的上下文：
 
 ```ts
 // input.vue
 const formItemContext = inject(formItemContextKeys);
 ```
 
-这样 input 可以在输入值更新时，调用FormItem的validate并传入触发事件(blur，change...)，触发 validate 校验
+这样 input 可以在输入值更新时，调用 FormItem 的 validate 并传入触发事件(blur，change...)，触发 validate 校验
 
 ```js
 watch(
@@ -1055,9 +1053,9 @@ const validate: FormItemContext["validate"] = async (trigger, callback?) => {
 
 form 有多个 form-item，需要收集它们的 rule 来统一在 form 中做校验。
 
-- form提供addField方法供子组件调用
-- 子组件调用addField传递自己的context给父组件form
-- form校验所有子组件
+- form 提供 addField 方法供子组件调用
+- 子组件调用 addField 传递自己的 context 给父组件 form
+- form 校验所有子组件
 
 ```js
 // form.vue
@@ -1110,7 +1108,7 @@ const validate = async (
 };
 ```
 
-将form的validate方法暴露出去：
+将 form 的 validate 方法暴露出去：
 
 ```js
 // form.vue
@@ -1132,10 +1130,138 @@ const validateForm = () => {
 </script>
 
 <template>
-  <yx-form>
-    ref="formRef"
-  </yx-form>
-    <yx-button @click="validateForm">校验表单</yx-button>
+  <yx-form> ref="formRef" </yx-form>
+  <yx-button @click="validateForm">校验表单</yx-button>
 </template>
+```
+
+
+
+## 实现upload
+
+设计组件upload和子组件uploadcontent。
+
+以文件上传流程为例：
+
+1. 用户通过action传递上传目的地
+
+```vue
+  <yx-upload
+    multiple
+    :before-upload="handleBeforeUpload"
+    action="http://localhost:4000/upload"
+  >
+```
+
+2. Upload组件收到props，并增强UploadContentProps中的一系列方法，然后通过v-bind将增强后的计算属性uploadContentProps传递给UploadContent组件：
+
+```js
+const props = defineProps(uploadProps);
+
+const uploadContentProps = computed<UploadContentProps>(() => ({
+  ...props,
+  onStart: (rawFile) => {
+    // 上传之前的逻辑
+    console.log("start");
+  },
+  onProgress: (e, rawFile) => {
+    console.log("progress");
+  },
+  onRemove: (rawFile) => {
+    // console.log('start');
+  },
+  onError: (err, rawFile) => {
+    console.log("error");
+  },
+  onSuccess: (res, rawFile) => {
+    console.log("success");
+  },
+}));
+```
+
+3. UploadContent组件收到props，调用upload函数
+
+upload函数：
+
+- 将props中的属性作为参数传递给httpRequest
+- httpRequest实现xhr的一系列方法，最后调用`  xhr.send(formData);`实现发送文件
+
+本地测试时使用项目文件夹下的server作为服务器。
+
+运行服务器：
+
+```zsh
+nodemon server/server.cjs
+```
+
+
+
+## 实现calendar组件
+
+
+
+### 实现基本日历面板
+
+面板排版参照mac月日历
+
+
+
+### 实现日历功能
+
+- 按钮组：点击 【上个月/年、下个月/年】切换
+
+```vue
+// App.vue
+<script>
+const currentDate = ref(new Date());
+</script>
+
+<template>
+  <!-- 日历组件 -->
+  <yx-calendar v-model="currentDate"></yx-calendar>
+</template>
+```
+
+
+
+```js
+import { Dayjs } from "dayjs";
+
+const prevMonthDays = computed(() => date.value.subtract(1, "month").date(1));
+const nextMonthDays = computed(() => date.value.add(1, "month").date(1));
+const prevYearDays = computed(() => date.value.subtract(1, "year").date(1));
+const nextYearDays = computed(() => date.value.add(1, "year").date(1));
+
+const emits = defineEmits(calendarEmits);
+const pickDay = (day: Dayjs) => {
+  emits("update:modelValue", day.toDate());
+};
+
+const seleceDate = (type: CalendarDateType) => {
+  const dateMap: Record<CalendarDateType, Dayjs> = {
+    "prev-month": prevMonthDays.value,
+    "next-month": nextMonthDays.value,
+    "prev-year": prevYearDays.value,
+    "next-year": nextYearDays.value,
+    today: now,
+  };
+  const day = dateMap[type];
+  pickDay(day);
+};
+```
+
+- 点击上/下个月的日期格子，相当于点击上/下个月按钮
+
+- 用户可以自定义样式
+
+```vue
+  <yx-calendar v-model="currentDate">
+    <template #date-cell="{ data }">
+      <p :class="data.isSelected ? 'is-selected' : ''">
+        {{ data.day.split("-").slice(1).join("-") }}
+        {{ data.isSelected ? "✅" : "" }}
+      </p>
+    </template>
+  </yx-calendar>
 ```
 

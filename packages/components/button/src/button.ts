@@ -38,7 +38,7 @@ export const buttonProps = {
   },
   iconPlacement: {
     type: String as PropType<Placement>,
-    default: "left",
+    default: "", // 默认无icon
   },
 } as const;
 

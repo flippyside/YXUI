@@ -20,11 +20,12 @@ module.exports = {
   ],
 
   rules: {
-    // --- Vue 相关 ---
     "vue/multi-word-component-names": "off", // 允许单词组件名
     "vue/html-self-closing": "off",
     "vue/max-attributes-per-line": "off",
     "vue/singleling-html-element-content-newline": "off",
+    "@typescript-eslint/no-unused-vars": "off", // TS ESLint 规则关闭
+    "no-unused-vars": "off",
   },
 
   globals: {

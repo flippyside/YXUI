@@ -2,6 +2,7 @@
 import { AddCircle, Person } from "@vicons/ionicons5";
 import type { FormInstance } from "@yx/components/form";
 import type { Key, TreeOption } from "@yx/components/tree";
+import type { UpLoadRawFile } from "@yx/components/upload";
 import { reactive, ref, warn } from "vue";
 
 function createData(level = 3, parentKey = ""): object {
@@ -123,10 +124,42 @@ const validateForm = () => {
     console.log(valid, errors);
   });
 };
+
+const handleBeforeUpload = (rawFile: UpLoadRawFile) => {
+  return true;
+};
+
+const currentDate = ref(new Date());
+
+console.log(currentDate.value);
 </script>
 
 <template>
-  <yx-form
+  <!-- 日历组件 -->
+  <yx-calendar v-model="currentDate">
+    <template #date-cell="{ data }">
+      <p :class="data.isSelected ? 'is-selected' : ''">
+        {{ data.day.split("-").slice(1).join("-") }}
+        {{ data.isSelected ? "✅" : "" }}
+      </p>
+    </template>
+  </yx-calendar>
+
+  <!-- 上传 组件 -->
+  <!-- <yx-upload
+    multiple
+    :before-upload="handleBeforeUpload"
+    action="http://localhost:4000/upload"
+    :drag="true"
+  >
+    <yx-button>Upload</yx-button>
+  </yx-upload>
+  <yx-icon color="red" :size="24">
+    <AddCircle></AddCircle>
+  </yx-icon> -->
+
+  <!-- 表单组件 -->
+  <!-- <yx-form
     ref="formRef"
     :model="state"
     :rules="{
@@ -152,7 +185,6 @@ const validateForm = () => {
     >
       <yx-input placeholder="请输入用户名" v-model="state.username"></yx-input>
       <template #label>用户名</template>
-      <!-- <template #error>输入有误</template> -->
     </yx-form-item>
     <yx-form-item
       prop="password"
@@ -165,19 +197,19 @@ const validateForm = () => {
           trigger: ['change', 'blur'],
         },
       ]"
-    >
+    >    
       <yx-input
         placeholder="请输入密码"
         v-model="state.password"
         type="password"
       ></yx-input>
       <template #label>密码</template>
-      <!-- <template #error>输入有误</template> -->
     </yx-form-item>
     <yx-button size="medium" type="primary" :round="true" @click="validateForm"
       >校验表单</yx-button
     >
-  </yx-form>
+  </yx-form>  -->
+
   <!-- <yx-icon color="red" :size="24">
     <AddCircle></AddCircle>
   </yx-icon>
